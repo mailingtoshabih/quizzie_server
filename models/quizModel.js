@@ -6,7 +6,7 @@ const schema = {
     quiz: { type: Array, required: true },
     createdAt: { type: Number, required: true },
     impression: { type: Number },
-    link: { type: String, required: true },
+    link: { type: String },
 }
 
 const quizSchema = new mongoose.Schema(schema);

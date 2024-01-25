@@ -16,13 +16,17 @@ router.post('/publishquiz', async (req, res) => {
             title,
             type,
             quiz: quizzes,
-            link: "somelink",
+            link: "",
             impression: 100,
             createdAt: new Date(),
         })
-        await newQuiz.save();
-        // save the quiz id that is published just now
-        res.json("Quiz Published");
+
+        const savedQuiz = await newQuiz.save();
+
+        // Update the link property with the saved quiz ID
+        savedQuiz.link = `http://localhost:3000/quiz/attempquiz/${savedQuiz._id}`;
+        await savedQuiz.save();
+        res.send(true);
     }
     catch (error) {
         res.status(500).send(error.message);
@@ -49,6 +53,36 @@ router.get("/attempquiz/:id", async (req, res) => {
 })
 
 
+router.get('/getquiz/:id', async (req, res) => {
+    try {
+        const quizId = req.params.id;
+        const quiz = await Quiz.findById(quizId);
+
+        if (!quiz) {
+            return res.status(404).json({ error: 'Quiz not found' });
+        }
+
+        res.json(quiz);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+router.get('/recentquiz', async (req, res) => {
+    try {
+        const mostRecentQuiz = await Quiz.findOne().sort({ createdAt: -1 });
+        if (!mostRecentQuiz) {
+            return res.status(404).json({ error: 'No published quizzes found' });
+        }
+        res.json(mostRecentQuiz.link);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
 
 router.get('/getallquiz', async (req, res) => {
     try {
@@ -60,9 +94,25 @@ router.get('/getallquiz', async (req, res) => {
     }
 })
 
-router.delete("/deletequiz", async (req, res) => {
 
-})
+router.delete('/delete/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        // Check if the quiz exists
+        const quiz = await Quiz.findById(id);
+        if (!quiz) {
+            return res.status(404).json({ error: 'Quiz not found' });
+        }
+
+        // Perform any additional authorization checks if needed (e.g., check if the user is allowed to delete the quiz)
+
+        await Quiz.findByIdAndDelete(id);
+        res.send(true);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
 
 
 
