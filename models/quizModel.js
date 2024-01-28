@@ -7,6 +7,10 @@ const schema = {
     createdAt: { type: Number, required: true },
     impression: { type: Number },
     link: { type: String },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Reference to the User model
+    },
 }
 
 const quizSchema = new mongoose.Schema(schema);

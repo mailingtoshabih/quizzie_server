@@ -2,9 +2,14 @@ const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/authMiddleware');
 
 
 
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, 'your-secret-key', { expiresIn: '1y' });
+};
 
 // Add a new user
 router.post('/signup', async (req, res) => {
@@ -17,10 +22,13 @@ router.post('/signup', async (req, res) => {
         //     return res.status(400).json({ error: 'Email is already registered' });
         // }
         const hashedPassword = await bcrypt.hash(password, 10);
-
         const newUser = User({ username, email, password: hashedPassword });
         await newUser.save();
-        res.send(true);
+
+        // -------------
+        const token = generateToken(newUser._id);
+        res.json({ user: newUser, token });
+
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -34,20 +42,13 @@ router.post('/login', async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-        
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
-
-        // Generate a JSON Web Token (JWT) for authentication
-        // const token = jwt.sign({ userId: user._id }, 'your-secret-key', {
-        //     expiresIn: '1h', // You can adjust the expiration time as needed
-        // });
-
-        // Return the token as a response
-        res.json(user);
-
+        const token = generateToken(user._id);
+        res.json({ user, token });
     } catch (error) {
         res.status(500).send(error.message);
     }
@@ -63,6 +64,10 @@ router.get('/', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+router.get('/verify-token', authMiddleware, (req, res) => {
+    res.json({ message: 'Token is valid' });
 });
 
 

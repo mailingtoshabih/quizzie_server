@@ -1,11 +1,14 @@
 const express = require('express');
 const Quiz = require('../models/quizModel');
+const authMiddleware = require('../middleware/authMiddleware'); // Use the middleware
+
 const router = express.Router();
 
 
-router.post('/publishquiz', async (req, res) => {
+// Called by Pollpage.jsx
+router.post('/publishquiz', authMiddleware, async (req, res) => {
     try {
-        const { title, type } = req.body.initialForm;
+        const { title, type, userId } = req.body.initialForm;
         const quizdata = req.body.stateValue;
 
         let quizzes = [];
@@ -17,14 +20,15 @@ router.post('/publishquiz', async (req, res) => {
             type,
             quiz: quizzes,
             link: "",
-            impression: 100,
+            impression: 0,
+            createdBy: userId,
             createdAt: new Date(),
         })
 
         const savedQuiz = await newQuiz.save();
 
         // Update the link property with the saved quiz ID
-        savedQuiz.link = `http://localhost:3000/quiz/attempquiz/${savedQuiz._id}`;
+        savedQuiz.link = `http://localhost:5173/quiz/attempquiz/${savedQuiz._id}`;
         await savedQuiz.save();
         res.send(true);
     }
@@ -33,27 +37,30 @@ router.post('/publishquiz', async (req, res) => {
     }
 })
 
+
+// Called by Quiz.jsx
 router.get("/attempquiz/:id", async (req, res) => {
     try {
-        const { id } = req.params; // Assuming quizLink and answers are sent in the request body
+        const { id } = req.params;
 
         // Find the quiz in the database based on the provided quizLink
         const quiz = await Quiz.findOne({ _id: id });
         if (!quiz) {
             return res.status(404).json({ error: 'Quiz not found' });
         }
-        // Perform logic to check answers and calculate score if needed
+        quiz.impression += 1;
+        await quiz.save();
         // For simplicity, let's assume the answers are an array of user's choices
         // You would need to implement your own logic based on the quiz structure
         res.send(quiz);
     } catch (error) {
         res.status(500).send(error.message);
     }
-
 })
 
 
-router.get('/getquiz/:id', async (req, res) => {
+// Called by Question.jsx
+router.get('/getquiz/:id', authMiddleware, async (req, res) => {
     try {
         const quizId = req.params.id;
         const quiz = await Quiz.findById(quizId);
@@ -70,7 +77,8 @@ router.get('/getquiz/:id', async (req, res) => {
 });
 
 
-router.get('/recentquiz', async (req, res) => {
+// called by congrats.jsx
+router.get('/recentquiz', authMiddleware, async (req, res) => {
     try {
         const mostRecentQuiz = await Quiz.findOne().sort({ createdAt: -1 });
         if (!mostRecentQuiz) {
@@ -84,10 +92,12 @@ router.get('/recentquiz', async (req, res) => {
 });
 
 
-router.get('/getallquiz', async (req, res) => {
+// Called by analytics.jsx
+router.get('/getallquiz/:id', authMiddleware, async (req, res) => {
     try {
-        const users = await Quiz.find();
-        res.json(users);
+        const id = req.params.id;
+        const userQuizzes = await Quiz.find({ createdBy: id });
+        res.json(userQuizzes);
     }
     catch (e) {
         console.log(e.message);
@@ -95,7 +105,8 @@ router.get('/getallquiz', async (req, res) => {
 })
 
 
-router.delete('/delete/:id', async (req, res) => {
+// Called by Tablerow.jsx
+router.delete('/delete/:id', authMiddleware, async (req, res) => {
     try {
         const id = req.params.id;
 
@@ -115,19 +126,20 @@ router.delete('/delete/:id', async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
+router.get("/trending/:id", async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const trendingUserQuizzes = await Quiz.find({ createdBy: userId, impression: { $gt: 10 } })
+        res.send(trendingUserQuizzes);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
 
 
 
 router.post('/updatequiz', (req, res) => {
 })
+
+
 module.exports = router;
