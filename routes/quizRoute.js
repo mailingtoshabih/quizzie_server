@@ -27,7 +27,8 @@ router.post('/publishquiz', authMiddleware, async (req, res) => {
         const savedQuiz = await newQuiz.save();
 
         // Update the link property with the saved quiz ID
-        savedQuiz.link = `http://localhost:5173/quiz/attempquiz/${savedQuiz._id}`;
+        savedQuiz.link = `https://main--velvety-starship-b6b56d.netlify.app/quiz/attempquiz/${savedQuiz._id}`;
+        
         await savedQuiz.save();
         res.send(true);
     }
