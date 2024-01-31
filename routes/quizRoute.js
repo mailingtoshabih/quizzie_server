@@ -7,7 +7,7 @@ const router = express.Router();
 
 
 // Called by Pollpage.jsx
-router.post('/publishquiz', authMiddleware, async (req, res) => {
+router.post('/publishquiz', async (req, res) => {
     try {
         const { title, type, userId } = req.body.initialForm;
         const quizdata = req.body.stateValue;
@@ -61,7 +61,7 @@ router.get("/attempquiz/:id", async (req, res) => {
 
 
 // Called by Question.jsx
-router.get('/getquiz/:id', authMiddleware, async (req, res) => {
+router.get('/getquiz/:id', async (req, res) => {
     try {
         const quizId = req.params.id;
         const quiz = await Quiz.findById(quizId);
@@ -79,7 +79,7 @@ router.get('/getquiz/:id', authMiddleware, async (req, res) => {
 
 
 // called by congrats.jsx
-router.get('/recentquiz', authMiddleware, async (req, res) => {
+router.get('/recentquiz', async (req, res) => {
     try {
         const mostRecentQuiz = await Quiz.findOne().sort({ createdAt: -1 });
         if (!mostRecentQuiz) {
@@ -94,7 +94,7 @@ router.get('/recentquiz', authMiddleware, async (req, res) => {
 
 
 // Called by analytics.jsx
-router.get('/getallquiz/:id', authMiddleware, async (req, res) => {
+router.get('/getallquiz/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const userQuizzes = await Quiz.find({ createdBy: id });
@@ -107,7 +107,7 @@ router.get('/getallquiz/:id', authMiddleware, async (req, res) => {
 
 
 // Called by Tablerow.jsx
-router.delete('/delete/:id', authMiddleware, async (req, res) => {
+router.delete('/delete/:id', async (req, res) => {
     try {
         const id = req.params.id;
 
