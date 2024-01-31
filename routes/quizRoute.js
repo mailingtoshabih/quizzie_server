@@ -1,6 +1,7 @@
 const express = require('express');
 const Quiz = require('../models/quizModel');
 const authMiddleware = require('../middleware/authMiddleware'); // Use the middleware
+const e = require('express');
 
 const router = express.Router();
 
@@ -138,8 +139,32 @@ router.get("/trending/:id", async (req, res) => {
 
 
 
-router.post('/updatequiz', (req, res) => {
-})
+
+// Route to save answers and update the previous quiz
+router.post('/saveanswer', async (req, res) => {
+    try {
+        const { quizid, question, answers } = req.body;
+        // res.send({quizid,question,answers})
+
+        const updatedQuiz = await Quiz.findOneAndUpdate(
+            { _id: quizid, 'quiz.question': question },
+            { $push: { 'quiz.$.userAnswers': answers } },
+            { new: true } 
+        );
+
+        if (!updatedQuiz) {
+            return res.status(404).json({ error: 'Question or Quiz not found' });
+        }
+
+        const updatedQuestion = updatedQuiz.quiz.find(q => q.question === question);
+        res.send(updatedQuiz);
+    } catch (error) {
+        // Handle errors and send an appropriate response
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 
 
 module.exports = router;
