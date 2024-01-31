@@ -1,13 +1,11 @@
 const express = require('express');
 const Quiz = require('../models/quizModel');
 const authMiddleware = require('../middleware/authMiddleware'); // Use the middleware
-const e = require('express');
-
 const router = express.Router();
 
 
 // Called by Pollpage.jsx
-router.post('/publishquiz', async (req, res) => {
+router.post('/publishquiz', authMiddleware, async (req, res) => {
     try {
         const { title, type, userId } = req.body.initialForm;
         const quizdata = req.body.stateValue;
@@ -61,7 +59,7 @@ router.get("/attempquiz/:id", async (req, res) => {
 
 
 // Called by Question.jsx
-router.get('/getquiz/:id', async (req, res) => {
+router.get('/getquiz/:id', authMiddleware, async (req, res) => {
     try {
         const quizId = req.params.id;
         const quiz = await Quiz.findById(quizId);
@@ -79,7 +77,7 @@ router.get('/getquiz/:id', async (req, res) => {
 
 
 // called by congrats.jsx
-router.get('/recentquiz', async (req, res) => {
+router.get('/recentquiz', authMiddleware, async (req, res) => {
     try {
         const mostRecentQuiz = await Quiz.findOne().sort({ createdAt: -1 });
         if (!mostRecentQuiz) {
@@ -94,7 +92,7 @@ router.get('/recentquiz', async (req, res) => {
 
 
 // Called by analytics.jsx
-router.get('/getallquiz/:id', async (req, res) => {
+router.get('/getallquiz/:id', authMiddleware, async (req, res) => {
     try {
         const id = req.params.id;
         const userQuizzes = await Quiz.find({ createdBy: id });
@@ -106,8 +104,8 @@ router.get('/getallquiz/:id', async (req, res) => {
 })
 
 
-// Called by Tablerow.jsx
-router.delete('/delete/:id', async (req, res) => {
+// Called by Delete.jsx
+router.delete('/delete/:id', authMiddleware, async (req, res) => {
     try {
         const id = req.params.id;
 
@@ -127,6 +125,7 @@ router.delete('/delete/:id', async (req, res) => {
 });
 
 
+// Called by dashboard
 router.get("/trending/:id", async (req, res) => {
     try {
         const userId = req.params.id;
@@ -139,8 +138,7 @@ router.get("/trending/:id", async (req, res) => {
 
 
 
-
-// Route to save answers and update the previous quiz
+// called by Quizpage
 router.post('/saveanswer', async (req, res) => {
     try {
         const { quizid, question, answers } = req.body;
@@ -149,7 +147,7 @@ router.post('/saveanswer', async (req, res) => {
         const updatedQuiz = await Quiz.findOneAndUpdate(
             { _id: quizid, 'quiz.question': question },
             { $push: { 'quiz.$.userAnswers': answers } },
-            { new: true } 
+            { new: true }
         );
 
         if (!updatedQuiz) {

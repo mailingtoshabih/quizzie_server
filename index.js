@@ -1,15 +1,15 @@
-const authRoute = require('./routes/authRoute');
-const quizRoute = require('./routes/quizRoute');
 const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv').config();
+const authRoute = require('./routes/authRoute');
+const quizRoute = require('./routes/quizRoute');
 
-const mongoDBUri = process.env.MONGODB_URI;
 const app = express();
+const mongoDBUri = process.env.MONGODB_URI;
 
 
-mongoose.connect(`${mongoDBUri}`)
+mongoose.connect(mongoDBUri)
     .then(() => console.log("Server Connected..."))
     .catch((e) => console.log(e.message))
 
