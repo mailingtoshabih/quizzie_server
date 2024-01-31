@@ -9,7 +9,7 @@ const mongoDBUri = process.env.MONGODB_URI;
 const app = express();
 
 
-mongoose.connect(mongoDBUri)
+mongoose.connect(`${mongoDBUri}`)
     .then(() => console.log("Server Connected..."))
     .catch((e) => console.log(e.message))
 
